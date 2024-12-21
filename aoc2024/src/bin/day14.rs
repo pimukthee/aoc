@@ -1,3 +1,4 @@
+use std::cmp::Ordering::*;
 #[derive(Debug, Clone)]
 struct Robot {
     x: i32,
@@ -11,30 +12,23 @@ const WIDTH: i32 = 101;
 const TIME: i32 = 100;
 
 fn part1(robots: &[Robot]) -> usize {
-    let robots: Vec<Robot> = robots
+    robots
         .iter()
-        .map(|robot| Robot {
-            x: (WIDTH + (robot.x + TIME * robot.vx) % WIDTH) % WIDTH,
-            y: (HEIGHT + (robot.y + TIME * robot.vy) % HEIGHT) % HEIGHT,
-            vx: robot.vx,
-            vy: robot.vy,
-        })
-        .collect();
+        .fold([0, 0, 0, 0], |mut acc, robot| {
+            let x = (WIDTH + (robot.x + TIME * robot.vx) % WIDTH) % WIDTH;
+            let y = (HEIGHT + (robot.y + TIME * robot.vy) % HEIGHT) % HEIGHT;
 
-    [
-        ((0, WIDTH / 2 - 1), (0, HEIGHT / 2 - 1)),
-        ((WIDTH / 2 + 1, WIDTH - 1), (0, HEIGHT / 2 - 1)),
-        ((0, WIDTH / 2 - 1), (HEIGHT / 2 + 1, HEIGHT - 1)),
-        ((WIDTH / 2 + 1, WIDTH - 1), (HEIGHT / 2 + 1, HEIGHT - 1)),
-    ]
-    .into_iter()
-    .map(|(x, y)| {
-        robots
-            .iter()
-            .filter(|robot| robot.x >= x.0 && robot.x <= x.1 && robot.y >= y.0 && robot.y <= y.1)
-            .count()
-    })
-    .product()
+            match (x.cmp(&(WIDTH / 2)), y.cmp(&(HEIGHT / 2))) {
+                (Less, Less) => acc[0] += 1,
+                (Less, Greater) => acc[2] += 1,
+                (Greater, Less) => acc[1] += 1,
+                (Greater, Greater) => acc[3] += 1,
+                _ => (),
+            };
+            acc
+        })
+        .iter()
+        .product()
 }
 
 fn main() {
