@@ -59,9 +59,11 @@ fn part1(grid: &Vec<Vec<u8>>, cheat: isize) -> usize {
             if dist_src[i][j] == usize::MAX {
                 continue;
             }
+
             for k in -cheat..cheat+1 {
-                for l in -cheat..cheat+1 {
-                    let k_abs = k.abs() as usize;
+                let max_l = cheat - k.abs();
+                let k_abs = k.abs() as usize;
+                for l in -max_l..max_l+1 {
                     let l_abs = l.abs() as usize;
                     if k_abs + l_abs > cheat as usize {
                         continue;
