@@ -49,7 +49,7 @@ fn part2(adj_list: &[Vec<(u8, u8)>], edges: &HashSet<((u8, u8), (u8, u8))>) -> S
         }
     }
     max_clique.sort_unstable();
-    max_clique.into_iter().map(|(pre, suf)| format!("{}{}", pre as char, suf as char)).collect::<Vec<String>>().join(",")
+    max_clique.into_iter().map(|(pre, suf)| format!("{}{}", pre as char, suf as char)).reduce(|acc, node| format!("{},{}", acc, node)).unwrap()
 }
 
 fn part1(adj_list: &[Vec<(u8, u8)>], edges: &HashSet<((u8, u8), (u8, u8))>) -> usize {
