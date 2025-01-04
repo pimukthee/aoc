@@ -1,8 +1,8 @@
-use std::{cmp::Reverse, collections::{BinaryHeap, VecDeque}};
+use std::{cmp::Reverse, collections::{BinaryHeap, VecDeque}, time::Instant};
 
 const WIDTH: usize = 71;
 const HEIGHT: usize = 71;
-const DIRS: [(i32, i32); 4] = [(-1, 0), (0, 1), (1, 0), (0, -1)];
+const DIRS: [(isize, isize); 4] = [(-1, 0), (0, 1), (1, 0), (0, -1)];
 
 fn shortest_path(block: &[[bool; WIDTH]; HEIGHT]) -> usize {
     let mut q = BinaryHeap::new();
@@ -16,8 +16,8 @@ fn shortest_path(block: &[[bool; WIDTH]; HEIGHT]) -> usize {
         dist[r][c] = dis;
 
         for dir in DIRS {
-            let row = r as i32 + dir.0;
-            let col = c as i32 + dir.1;
+            let row = r as isize + dir.0;
+            let col = c as isize + dir.1;
             if row < 0 || row as usize >= HEIGHT || col < 0 || col as usize >= WIDTH {
                 continue;
             }
@@ -27,7 +27,7 @@ fn shortest_path(block: &[[bool; WIDTH]; HEIGHT]) -> usize {
                 continue;
             }
 
-            q.push(Reverse((dis + 1, (row as usize, col as usize))));
+            q.push(Reverse((dis + 1, (row, col))));
         }
     }
 
@@ -44,17 +44,36 @@ fn part1(corrupted: &[(usize, usize)]) -> usize {
 }
 
 fn part2(corrupted: &[(usize, usize)]) -> (usize, usize) {
-    let mut block = [[false; WIDTH]; HEIGHT];
+    let mut block = [[corrupted.len() - 1; WIDTH]; HEIGHT];
     for (i, &pos) in corrupted.iter().enumerate() {
-        block[pos.0][pos.1] = true;
-        if i >= 1024 {
-            if shortest_path(&block) == usize::MAX {
-                return pos;
+        block[pos.0][pos.1] = i;
+    }
+
+    let mut dist = [[0; WIDTH]; HEIGHT];
+    dist[0][0] = block[0][0];
+    let mut q = VecDeque::new();
+    q.push_back((0_usize, 0_usize));
+
+    while let Some(pos) = q.pop_front() {
+        for dir in DIRS {
+            let row = pos.0 as isize + dir.0;
+            let col = pos.1 as isize + dir.1;
+            
+            if row < 0 || row >= HEIGHT as isize || col < 0 || col >= WIDTH as isize {
+                continue;
+            }
+
+            let row = row as usize;
+            let col = col as usize;
+            let x = dist[pos.0][pos.1].min(block[row][col]);
+            if x > dist[row][col] {
+                dist[row][col] = x;
+                q.push_back((row, col));
             }
         }
     }
 
-    unreachable!()
+    corrupted[dist[HEIGHT-1][WIDTH-1]]
 }
 
 fn main() {
