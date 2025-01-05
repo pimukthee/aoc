@@ -51,11 +51,13 @@ fn part2(corrupted: &[(usize, usize)]) -> (usize, usize) {
 
     let mut dist = [[0; WIDTH]; HEIGHT];
     dist[0][0] = block[0][0];
-    let mut q = VecDeque::new();
-    q.push_back((0_usize, 0_usize));
+    let mut q = BinaryHeap::new();
+    q.push((dist[0][0], (0_usize, 0_usize)));
+    let mut cnt = 0;
 
-    while let Some(pos) = q.pop_front() {
-        for dir in DIRS {
+    while let Some((dis, pos)) = q.pop() {
+        cnt += 1;
+       for dir in DIRS {
             let row = pos.0 as isize + dir.0;
             let col = pos.1 as isize + dir.1;
             
@@ -65,13 +67,15 @@ fn part2(corrupted: &[(usize, usize)]) -> (usize, usize) {
 
             let row = row as usize;
             let col = col as usize;
-            let x = dist[pos.0][pos.1].min(block[row][col]);
+            let x = dis.min(block[row][col]);
             if x > dist[row][col] {
                 dist[row][col] = x;
-                q.push_back((row, col));
+                q.push((x, (row, col)));
             }
         }
     }
+
+    println!("{}", cnt);
 
     corrupted[dist[HEIGHT-1][WIDTH-1]]
 }
