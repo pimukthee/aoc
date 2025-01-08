@@ -1,11 +1,11 @@
 use std::{
     cmp::Reverse,
-    collections::BinaryHeap, time::Instant,
+    collections::{BinaryHeap, VecDeque}, time::Instant,
 };
 
 const DIRS: [(isize, isize); 4] = [(-1, 0), (0, 1), (1, 0), (0, -1)];
 
-fn find(grid: &Vec<Vec<u8>>, target: u8) -> (usize, usize) {
+fn find(grid: &[Vec<u8>], target: u8) -> (usize, usize) {
     grid.iter()
         .enumerate()
         .find_map(|(i, row)| {
@@ -17,26 +17,22 @@ fn find(grid: &Vec<Vec<u8>>, target: u8) -> (usize, usize) {
         .unwrap()
 }
 
-fn shortest_path_from(grid: &Vec<Vec<u8>>, src: (usize, usize)) -> Vec<Vec<usize>> {
+fn shortest_path_from(grid: &[Vec<u8>], src: (usize, usize)) -> Vec<Vec<usize>> {
     let height = grid.len();
     let width = grid[0].len();
     let mut dist = vec![vec![usize::MAX; width]; height];
 
-    let mut q = BinaryHeap::new();
-    q.push(Reverse((0_usize, src)));
+    let mut q = VecDeque::new();
+    q.push_back(src);
 
-    while let Some(Reverse((dis, pos))) = q.pop() {
-        if dist[pos.0][pos.1] <= dis {
-            continue;
-        }
-
-        dist[pos.0][pos.1] = dis;
+    while let Some(pos) = q.pop_front() {
         for dir in DIRS {
             let row = (pos.0 as isize + dir.0) as usize;
             let col = (pos.1 as isize + dir.1) as usize;
 
-            if grid[row][col] == b'.' || grid[row][col] == b'S' || grid[row][col] == b'E' {
-                q.push(Reverse((dis + 1, (row, col))));
+            if dist[row][col] == usize::MAX && (grid[row][col] == b'.' || grid[row][col] == b'S' || grid[row][col] == b'E') {
+                dist[row][col] = dist[pos.0][pos.1] + 1;
+                q.push_back((row, col));
             }
         }
     }
@@ -44,27 +40,26 @@ fn shortest_path_from(grid: &Vec<Vec<u8>>, src: (usize, usize)) -> Vec<Vec<usize
     dist
 }
 
-fn part1(grid: &Vec<Vec<u8>>, cheat: isize) -> usize {
+fn part1(grid: &[Vec<u8>], cheat: isize) -> usize {
     let src = find(grid, b'S');
     let dst = find(grid, b'E');
     let height = grid.len();
     let width = grid[0].len();
-    let dist_src = shortest_path_from(grid, src);
     let dist_dst = shortest_path_from(grid, dst);
-    let orig_cost = dist_src[dst.0][dst.1];
+    let orig_cost = dist_dst[src.0][src.1];
     let mut ans = 0;
 
     for i in 1..height - 1 {
         for j in 1..width - 1 {
-            if dist_src[i][j] == usize::MAX {
+            if dist_dst[i][j] == usize::MAX {
                 continue;
             }
 
             for k in -cheat..cheat+1 {
                 let max_l = cheat - k.abs();
-                let k_abs = k.abs() as usize;
+                let k_abs = k.unsigned_abs();
                 for l in -max_l..max_l+1 {
-                    let l_abs = l.abs() as usize;
+                    let l_abs = l.unsigned_abs();
                     if k_abs + l_abs > cheat as usize {
                         continue;
                     }
@@ -77,7 +72,7 @@ fn part1(grid: &Vec<Vec<u8>>, cheat: isize) -> usize {
                         continue;
                     }
                 
-                    let new_cost = dist_src[i][j] + k_abs + l_abs + dist_dst[row as usize][col as usize];
+                    let new_cost = (orig_cost - dist_dst[i][j]) + k_abs + l_abs + dist_dst[row as usize][col as usize];
                     if new_cost >= orig_cost {
                         continue;
                     }
@@ -101,8 +96,6 @@ fn main() {
     }
 
     let ans1 = part1(&grid, 2);
-    let now = Instant::now();
     let ans2 = part1(&grid, 20);
-    println!("{:?}", now.elapsed());
     println!("ans1 {}\nans2 {}", ans1, ans2);
 }
